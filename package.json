@@ -12,7 +12,6 @@
     "@dfns/sdk": "^0.6.4-rc.1",
     "@dfns/sdk-browser": "^0.6.4-rc.1",
     "@dfns/sdk-keysigner": "^0.6.4-rc.1",
-    "@tailwindcss/oxide-darwin-x64": "^4.0.14",
     "next": "15.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
