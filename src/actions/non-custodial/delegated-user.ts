@@ -4,6 +4,7 @@ import { Fido2Attestation } from "@dfns/sdk";
 
 export const createRegistrationChallenge = async (username: string) => {
   try {
+    console.log("Creating challenge for user: ", username);
     const serverClient = createDfnsApiClient();
     const challenge =
       await serverClient.auth.createDelegatedRegistrationChallenge({
