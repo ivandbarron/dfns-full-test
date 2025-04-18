@@ -32,7 +32,7 @@ export const createWalletCreationChallenge = async (
     const delegatedServerClient = createDelegatedDfnsApiClient(authToken);
 
     const challenge = await delegatedServerClient.wallets.createWalletInit({
-      body: { network: "PolygonAmoy", name: walletName } as CreateWalletBody,
+      body: { network: "SolanaDevnet", name: walletName } as CreateWalletBody,
     });
 
     console.log("Challenge created");
@@ -53,7 +53,7 @@ export const completeCreation = async (
     const delegatedServerClient = createDelegatedDfnsApiClient(authToken);
 
     const request: CreateWalletRequest = {
-      body: { network: "PolygonAmoy", name: walletName } as CreateWalletBody,
+      body: { network: "SolanaDevnet", name: walletName } as CreateWalletBody,
     };
     const signedChallenge: SignUserActionChallengeRequest = {
       challengeIdentifier,
@@ -105,19 +105,20 @@ export const createTransferChallenge = async (
   authToken: string,
   fromWalletId: string,
   toAddress: string,
-  amount: string
+  amount: string,
+  memo: string | undefined = undefined
 ) => {
   try {
     const delegatedServerClient = createDelegatedDfnsApiClient(authToken);
     // from "0.0006" to "600000000000000"
-    const paddedAmount = (Number(amount) * 10 ** 18).toString().slice(0, 18);
+    //const paddedAmount = (Number(amount) * 10 ** 18).toString().slice(0, 18);
     const challenge = await delegatedServerClient.wallets.transferAssetInit({
       walletId: fromWalletId,
       body: {
         to: toAddress,
-        amount: paddedAmount,
+        amount: amount,
         kind: "Native",
-        memo: "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890_1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
+        memo,
       },
     });
 
@@ -135,7 +136,8 @@ export const completeTransfer = async (
   challengeIdentifier: string,
   fromWalletId: string,
   toAddress: string,
-  amount: string
+  amount: string,
+  memo: string | undefined = undefined
 ) => {
   try {
     const delegatedServerClient = createDelegatedDfnsApiClient(authToken);
@@ -151,7 +153,7 @@ export const completeTransfer = async (
     // so now we have to multiply the amount by 10 ** decimals
     // so the new amount is: amount * 10 ** decimals
     // and the new amount is: amount * 10 ** 18
-    const paddedAmount = (Number(amount) * 10 ** 18).toString().slice(0, 18);
+    //const paddedAmount = (Number(amount) * 10 ** 18).toString().slice(0, 18);
 
     const response: TransferAssetResponse =
       await delegatedServerClient.wallets.transferAssetComplete(
@@ -159,16 +161,16 @@ export const completeTransfer = async (
           walletId: fromWalletId,
           body: {
             to: toAddress,
-            amount: paddedAmount,
+            amount: amount,
             kind: "Native",
-            memo: "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890_1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
+            memo,
           },
         },
         signedChallenge
       );
 
     console.log("Transfer completed");
-    console.debug(response);
+    console.log(JSON.stringify(response, null, 2));
   } catch (error) {
     console.error(JSON.stringify(error, null, 2));
   }
