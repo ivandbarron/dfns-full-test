@@ -10,7 +10,18 @@ import {
   CreateWalletResponse,
   GetWalletAssetsResponse,
   TransferAssetResponse,
+  GetWalletResponse,
 } from "@dfns/sdk/generated/wallets";
+
+import {
+  Connection,
+  SystemProgram,
+  VersionedTransaction,
+  clusterApiUrl,
+  PublicKey,
+  TransactionMessage,
+} from "@solana/web3.js";
+import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
 
 export const list = async (authToken: string) => {
   try {
@@ -101,6 +112,49 @@ export const getBalance = async (authToken: string, walletId: string) => {
   }
 };
 
+const getPaddedAmount = (amount: string, decimals: number) => {
+  return (Number(amount) * 10 ** decimals).toString().slice(0, decimals);
+};
+
+const createSerializedTransactionMessage = async (
+  fromAddress: string,
+  toAddress: string,
+  amount: string,
+  memo: string
+) => {
+  const fromPubkey = new PublicKey(fromAddress);
+  const toPubkey = new PublicKey(toAddress);
+  const lamports = BigInt(Number(amount) * 10 ** 9);
+
+  const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+
+  const memoInstruction = {
+    programId: MEMO_PROGRAM_ID,
+    keys: [],
+    data: Buffer.from(memo, "utf8"),
+  };
+
+  const transferInstruction = SystemProgram.transfer({
+    fromPubkey,
+    toPubkey,
+    lamports,
+  });
+
+  const latestBlockhash = await connection.getLatestBlockhash();
+
+  const message = new TransactionMessage({
+    payerKey: fromPubkey,
+    recentBlockhash: latestBlockhash.blockhash,
+    instructions: [memoInstruction, transferInstruction],
+  }).compileToV0Message();
+
+  const tx = new VersionedTransaction(message);
+
+  const serializedTxHex = `0x${Buffer.from(tx.serialize()).toString("hex")}`;
+
+  return serializedTxHex;
+};
+
 export const createTransferChallenge = async (
   authToken: string,
   fromWalletId: string,
@@ -109,22 +163,45 @@ export const createTransferChallenge = async (
   memo: string | undefined = undefined
 ) => {
   try {
-    const delegatedServerClient = createDelegatedDfnsApiClient(authToken);
-    // from "0.0006" to "600000000000000"
-    //const paddedAmount = (Number(amount) * 10 ** 18).toString().slice(0, 18);
-    const challenge = await delegatedServerClient.wallets.transferAssetInit({
-      walletId: fromWalletId,
-      body: {
-        to: toAddress,
-        amount: amount,
-        kind: "Native",
-        memo,
-      },
-    });
+    if (!memo) {
+      const delegatedServerClient = createDelegatedDfnsApiClient(authToken);
+      const challenge = await delegatedServerClient.wallets.transferAssetInit({
+        walletId: fromWalletId,
+        body: {
+          to: toAddress,
+          amount: getPaddedAmount(amount, 9),
+          kind: "Native",
+        },
+      });
 
-    console.log("Transfer challenge created");
-    console.debug(challenge);
-    return challenge;
+      console.log("Transfer challenge created");
+      console.debug(challenge);
+      return challenge;
+    } else {
+      const delegatedServerClient = createDelegatedDfnsApiClient(authToken);
+      const wallet: GetWalletResponse =
+        await delegatedServerClient.wallets.getWallet({
+          walletId: fromWalletId,
+        });
+
+      const serializedTxHex = await createSerializedTransactionMessage(
+        wallet.address!,
+        toAddress,
+        amount,
+        memo
+      );
+
+      const challenge =
+        await delegatedServerClient.wallets.broadcastTransactionInit({
+          walletId: fromWalletId,
+          body: {
+            kind: "Transaction",
+            transaction: serializedTxHex,
+          },
+        });
+
+      return challenge;
+    }
   } catch (error) {
     console.error(JSON.stringify(error, null, 2));
   }
@@ -140,37 +217,62 @@ export const completeTransfer = async (
   memo: string | undefined = undefined
 ) => {
   try {
-    const delegatedServerClient = createDelegatedDfnsApiClient(authToken);
-    const signedChallenge: SignUserActionChallengeRequest = {
-      challengeIdentifier,
-      firstFactor: assertion,
-    };
+    if (!memo) {
+      const delegatedServerClient = createDelegatedDfnsApiClient(authToken);
+      const signedChallenge: SignUserActionChallengeRequest = {
+        challengeIdentifier,
+        firstFactor: assertion,
+      };
 
-    // amount: "0.0006"
-    // error: Expected big integer string
-
-    // rationale: because previously, in order to get the balance, we had to divide the balance by 10 ** decimals
-    // so now we have to multiply the amount by 10 ** decimals
-    // so the new amount is: amount * 10 ** decimals
-    // and the new amount is: amount * 10 ** 18
-    //const paddedAmount = (Number(amount) * 10 ** 18).toString().slice(0, 18);
-
-    const response: TransferAssetResponse =
-      await delegatedServerClient.wallets.transferAssetComplete(
-        {
-          walletId: fromWalletId,
-          body: {
-            to: toAddress,
-            amount: amount,
-            kind: "Native",
-            memo,
+      const response: TransferAssetResponse =
+        await delegatedServerClient.wallets.transferAssetComplete(
+          {
+            walletId: fromWalletId,
+            body: {
+              to: toAddress,
+              amount: getPaddedAmount(amount, 9),
+              kind: "Native",
+            },
           },
-        },
-        signedChallenge
+          signedChallenge
+        );
+
+      console.log("Transfer completed");
+      console.log(JSON.stringify(response, null, 2));
+    } else {
+      const delegatedServerClient = createDelegatedDfnsApiClient(authToken);
+      const wallet: GetWalletResponse =
+        await delegatedServerClient.wallets.getWallet({
+          walletId: fromWalletId,
+        });
+
+      const serializedTxHex = await createSerializedTransactionMessage(
+        wallet.address!,
+        toAddress,
+        amount,
+        memo
       );
 
-    console.log("Transfer completed");
-    console.log(JSON.stringify(response, null, 2));
+      const signedChallenge: SignUserActionChallengeRequest = {
+        challengeIdentifier,
+        firstFactor: assertion,
+      };
+
+      const response =
+        await delegatedServerClient.wallets.broadcastTransactionComplete(
+          {
+            walletId: fromWalletId,
+            body: {
+              kind: "Transaction",
+              transaction: serializedTxHex,
+            },
+          },
+          signedChallenge
+        );
+
+      console.log("Transfer completed");
+      console.log(JSON.stringify(response, null, 2));
+    }
   } catch (error) {
     console.error(JSON.stringify(error, null, 2));
   }

@@ -12,6 +12,8 @@
     "@dfns/sdk": "^0.6.4-rc.1",
     "@dfns/sdk-browser": "^0.6.4-rc.1",
     "@dfns/sdk-keysigner": "^0.6.4-rc.1",
+    "@solana/spl-memo": "^0.2.5",
+    "@solana/web3.js": "^1.98.0",
     "next": "15.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
