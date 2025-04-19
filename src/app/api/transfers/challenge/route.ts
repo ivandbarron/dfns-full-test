@@ -4,16 +4,22 @@ import { getRequestData } from "@/lib/iphone-test-utils";
 
 export const POST = async (request: NextRequest) => {
   try {
-    const { token, fromWalletId, toAddress, amount, memo } =
-      await getRequestData(request);
-    const challenge = await createTransferChallenge(
+    const body = await request.json();
+    const token = body.token as string;
+
+    const { fromWalletId, toAddress, amount, memo } = await getRequestData();
+
+    const { challenge, serializedTxHex } = await createTransferChallenge(
       token,
       fromWalletId,
       toAddress,
       amount,
       memo
     );
-    return NextResponse.json(challenge);
+    return NextResponse.json({
+      challenge,
+      serializedTxHex,
+    });
   } catch (error) {
     console.error(JSON.stringify(error, null, 2));
   }

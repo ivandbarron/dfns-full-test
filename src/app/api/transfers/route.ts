@@ -1,35 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { completeTransfer } from "@/actions/non-custodial/delegated-wallets";
+import { completeTransferTx } from "@/actions/non-custodial/delegated-wallets";
+import { Fido2Assertion } from "@dfns/sdk";
 import { getRequestData } from "@/lib/iphone-test-utils";
 
 export const POST = async (request: NextRequest) => {
   try {
-    const {
+    const body = await request.json();
+
+    const { fromWalletId } = await getRequestData();
+
+    const token = body.token as string;
+    const serializedTxHex = body.serializedTxHex as string;
+    const assertion = body.assertion as Fido2Assertion;
+    const challengeIdentifier = body.challengeIdentifier as string;
+
+    await completeTransferTx(
       token,
       fromWalletId,
-      toAddress,
-      amount,
-      memo,
+      serializedTxHex,
       assertion,
-      challengeIdentifier,
-    } = await getRequestData(request);
-
-    if (!assertion || !challengeIdentifier) {
-      console.error("Assertion or challengeIdentifier is missing");
-      return NextResponse.json(
-        { error: "Assertion or challengeIdentifier is missing" },
-        { status: 400 }
-      );
-    }
-
-    await completeTransfer(
-      token,
-      assertion,
-      challengeIdentifier,
-      fromWalletId,
-      toAddress,
-      amount,
-      memo
+      challengeIdentifier
     );
 
     return NextResponse.json({ message: "Transfer completed" });
