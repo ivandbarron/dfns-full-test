@@ -4,7 +4,6 @@ import {
   createTransferChallenge,
   completeTransfer,
 } from "@/actions/non-custodial/delegated-wallets";
-import { UserActionChallenge } from "@dfns/sdk";
 import { WebAuthnSigner } from "@dfns/sdk-browser";
 
 const NonCustodialWalletTransferForm = () => {
@@ -20,8 +19,12 @@ const NonCustodialWalletTransferForm = () => {
     const toAddress = formData.get("toAddress") as string;
     const amount = formData.get("amount") as string;
 
-    const challenge: UserActionChallenge | undefined =
-      await createTransferChallenge(token, fromWalletId, toAddress, amount);
+    const { challenge } = await createTransferChallenge(
+      token,
+      fromWalletId,
+      toAddress,
+      amount
+    );
 
     if (!challenge) {
       alert("Failed to create transaction: challenge creation failed");
