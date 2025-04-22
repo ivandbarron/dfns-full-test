@@ -16,6 +16,7 @@ import {
   TransferAssetResponse,
   GetWalletResponse,
 } from "@dfns/sdk/generated/wallets";
+import { sendPushNotification } from "@/lib/firebase/firebaseMessaging";
 
 import {
   Connection,
@@ -301,6 +302,29 @@ export const createDelegatedNCW = async (
     });
     console.log("Delegated wallet created");
     console.debug(response);
+  } catch (error) {
+    console.error(JSON.stringify(error, null, 2));
+  }
+};
+
+export const sendTransactionNotification = async (fcmToken: string) => {
+  try {
+    // We will need to get the fcm from the user, somehow,
+    // also before sending the message we need to create a kind
+    // of notification in the database, so we can track it
+    // and send the user the notification id, so we can carry the
+    // user in the mobile to the notification screen and the
+    // notification then will be marked as read and the user
+    // will be taken to the appropriate screen
+
+    sendPushNotification({
+      fcmToken,
+      title: "Transaction request in process",
+      body: "You need to sign the requested transaction.",
+      data: {
+        notificationID: "...some id from the db...",
+      },
+    });
   } catch (error) {
     console.error(JSON.stringify(error, null, 2));
   }

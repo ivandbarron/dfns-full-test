@@ -4,6 +4,7 @@ import NonCustodialWalletList from "./NonCustodialWalletList";
 import CreateNonCustodialWalletForm from "./CreateNonCustodialWalletForm";
 import NonCustodialWalletBalanceForm from "./NonCustodialWalletBalanceForm";
 import NonCustodialWalletTransferForm from "./NonCustodialWalletTransferForm";
+import NonCustodialWalletTransferFormMobile from "./NonCustodialWalletTransferFormMobile";
 import CreateNonCustodialDelegatedWalletForm from "./CreateNonCustodialDelagatedWalletForm";
 
 const NonCustodialWallets = () => {
@@ -16,6 +17,7 @@ const NonCustodialWallets = () => {
       <CreateNonCustodialWalletForm />
       <NonCustodialWalletBalanceForm />
       <NonCustodialWalletTransferForm />
+      <NonCustodialWalletTransferFormMobile />
       <CreateNonCustodialDelegatedWalletForm />
     </section>
   );
