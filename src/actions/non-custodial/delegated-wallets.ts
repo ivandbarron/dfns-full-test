@@ -207,7 +207,7 @@ export const createTransferChallenge = async (
         walletId: fromWalletId,
         body: {
           to: toAddress,
-          amount: getPaddedAmount(amount, 9),
+          amount: getPaddedAmount(amount, 18),
           kind: "Native",
         },
       });
@@ -300,7 +300,7 @@ export const completeTransfer = async (
           walletId: fromWalletId,
           body: {
             to: toAddress,
-            amount: getPaddedAmount(amount, 9),
+            amount: getPaddedAmount(amount, 18),
             kind: "Native",
           },
         },
