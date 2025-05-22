@@ -7,14 +7,13 @@ export const POST = async (request: NextRequest) => {
     const body = await request.json();
     const token = body.token as string;
 
-    const { fromWalletId, toAddress, amount, memo } = await getRequestData();
+    const { fromWalletId, toAddress, amount } = await getRequestData();
 
     const { challenge, serializedTxHex } = await createTransferChallenge(
       token,
       fromWalletId,
       toAddress,
-      amount,
-      memo
+      amount
     );
     return NextResponse.json({
       challenge,
