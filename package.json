@@ -9,16 +9,19 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@dfns/sdk": "^0.6.4-rc.1",
-    "@dfns/sdk-browser": "^0.6.4-rc.1",
-    "@dfns/sdk-keysigner": "^0.6.4-rc.1",
+    "@dfns/lib-viem": "^0.6.9",
+    "@dfns/sdk": "^0.6.9",
+    "@dfns/sdk-browser": "^0.6.9",
+    "@dfns/sdk-keysigner": "^0.6.9",
     "@solana/spl-memo": "^0.2.5",
     "@solana/web3.js": "^1.98.0",
+    "ethers": "^6.13.7",
     "firebase-admin": "^13.3.0",
     "next": "15.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "server-only": "^0.0.1",
+    "viem": "^2.28.4",
     "zustand": "^5.0.3"
   },
   "devDependencies": {

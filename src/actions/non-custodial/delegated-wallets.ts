@@ -16,7 +16,7 @@ import {
   TransferAssetResponse,
   GetWalletResponse,
 } from "@dfns/sdk/generated/wallets";
-import { sendPushNotification } from "@/lib/firebase/firebaseMessaging";
+import admin from "@/lib/firebase/firebaseMessaging";
 
 import {
   Connection,
@@ -27,6 +27,34 @@ import {
   TransactionMessage,
 } from "@solana/web3.js";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
+
+export async function sendPushNotification({
+  fcmToken,
+  title,
+  body,
+  data,
+}: {
+  fcmToken: string;
+  title: string;
+  body: string;
+  data?: Record<string, string>;
+}) {
+  try {
+    const message = {
+      token: fcmToken,
+      notification: {
+        title,
+        body,
+      },
+      data: data || {},
+    };
+
+    const response = await admin.messaging().send(message);
+    console.log("✅ Notificación enviada con ID:", response);
+  } catch (error) {
+    console.error("❌ Error enviando notificación:", error);
+  }
+}
 
 export const list = async (authToken: string) => {
   try {
